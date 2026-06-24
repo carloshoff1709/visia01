@@ -3,10 +3,13 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700;900&display=swap" rel="stylesheet"/>
 <title>Painel de Produção — Visia</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Segoe UI',Arial,sans-serif;background:#FFFFFF;color:#1A2540;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+body{font-family:'Source Sans 3','Segoe UI',Arial,sans-serif;background:#FFFFFF;color:#1A2540;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
 /* HEADER */
 .header{display:flex;align-items:center;justify-content:space-between;padding:7px 18px;background:#F5F7FA;border-bottom:1px solid #D8DCE3;flex-shrink:0;}
 .header-left{display:flex;align-items:center;gap:12px;}
@@ -31,7 +34,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#FFFFFF;color:#1A2540;he
 .leg{display:flex;align-items:center;gap:4px;font-size:10px;color:#6B7280;}
 .leg-dot{width:9px;height:9px;border-radius:2px;}
 /* CONFIG */
-.config-bar{display:flex;align-items:center;gap:7px;padding:5px 18px;background:#F5F7FA;border-bottom:1px solid #D8DCE3;flex-shrink:0;}
+.config-bar{display:none;}
 .config-bar label{font-size:10px;color:#6B7280;white-space:nowrap;}
 .config-bar input{flex:1;font-size:11px;padding:4px 8px;background:#FFF;border:1px solid #D8DCE3;border-radius:6px;color:#1A2540;max-width:460px;}
 .config-bar input:focus{outline:none;border-color:#185FA5;}
@@ -93,6 +96,7 @@ canvas{display:block;width:100%;height:100%;}
     </div>
   </div>
   <div class="header-right">
+    <button onclick="abrirConfiguracaoSom()" style="font-size:12px;padding:5px 12px;background:#EEF0F4;border:1px solid #D8DCE3;border-radius:6px;color:#374151;cursor:pointer;display:flex;align-items:center;gap:5px;">🔔 Som</button>
     <div><div class="clock" id="clk">--:--:--</div><div class="date-str" id="dt"></div></div>
     <div class="upd-badge"><div class="upd-dot" id="upd-dot"></div><span id="upd-label">aguardando</span></div>
   </div>
@@ -227,29 +231,53 @@ canvas{display:block;width:100%;height:100%;}
 
 <script>
 /* ── LAYOUT PLANTA BAIXA ─────────────────────────── */
-const LAYOUT = [
-  {id:'M5',  rx:.515,ry:.05,rw:.083,rh:.28},
-  {id:'M4',  rx:.608,ry:.05,rw:.083,rh:.28},
-  {id:'M3',  rx:.701,ry:.05,rw:.083,rh:.28},
-  {id:'M2',  rx:.794,ry:.05,rw:.083,rh:.28},
-  {id:'M1',  rx:.887,ry:.05,rw:.083,rh:.28},
-  {id:'E1',  rx:.012,ry:.36,rw:.093,rh:.28},
-  {id:'E2',  rx:.115,ry:.36,rw:.093,rh:.28},
-  {id:'E3',  rx:.218,ry:.36,rw:.093,rh:.28},
-  {id:'E4',  rx:.321,ry:.36,rw:.093,rh:.28},
-  {id:'E5',  rx:.424,ry:.36,rw:.093,rh:.28},
-  {id:'E6',  rx:.527,ry:.36,rw:.093,rh:.28},
-  {id:'E7',  rx:.630,ry:.36,rw:.093,rh:.28},
-  {id:'E8',  rx:.733,ry:.36,rw:.093,rh:.28},
-  {id:'E9',  rx:.012,ry:.68,rw:.093,rh:.28},
-  {id:'E10', rx:.115,ry:.68,rw:.093,rh:.28},
-  {id:'E11', rx:.218,ry:.68,rw:.093,rh:.28},
-  {id:'E12', rx:.321,ry:.68,rw:.093,rh:.28},
-  {id:'E13', rx:.424,ry:.68,rw:.093,rh:.28},
-  {id:'E14', rx:.527,ry:.68,rw:.093,rh:.28},
-  {id:'E15', rx:.630,ry:.68,rw:.093,rh:.28},
-  {id:'E16', rx:.733,ry:.68,rw:.093,rh:.28},
+/* ── LAYOUTS SEPARADOS ──────────────────────────── */
+/* Visão 1: Montagem M1-M5 centralizadas em tela cheia */
+const LAYOUT_MONTAGEM = [
+  {id:'M1', rx:.012, ry:.02, rw:.188, rh:.96},
+  {id:'M2', rx:.212, ry:.02, rw:.188, rh:.96},
+  {id:'M3', rx:.412, ry:.02, rw:.188, rh:.96},
+  {id:'M4', rx:.612, ry:.02, rw:.188, rh:.96},
+  {id:'M5', rx:.812, ry:.02, rw:.188, rh:.96},
 ];
+
+/* Visão 2: Estações E1-E16 em duas fileiras */
+const LAYOUT_ESTACOES = [
+  {id:'E1', rx:0.008,ry:0.02,rw:0.1160,rh:0.46},
+  {id:'E2', rx:0.132,ry:0.02,rw:0.1160,rh:0.46},
+  {id:'E3', rx:0.256,ry:0.02,rw:0.1160,rh:0.46},
+  {id:'E4', rx:0.380,ry:0.02,rw:0.1160,rh:0.46},
+  {id:'E5', rx:0.504,ry:0.02,rw:0.1160,rh:0.46},
+  {id:'E6', rx:0.628,ry:0.02,rw:0.1160,rh:0.46},
+  {id:'E7', rx:0.752,ry:0.02,rw:0.1160,rh:0.46},
+  {id:'E8', rx:0.876,ry:0.02,rw:0.1160,rh:0.46},
+  {id:'E9', rx:0.008,ry:0.52,rw:0.1160,rh:0.46},
+  {id:'E10', rx:0.132,ry:0.52,rw:0.1160,rh:0.46},
+  {id:'E11', rx:0.256,ry:0.52,rw:0.1160,rh:0.46},
+  {id:'E12', rx:0.380,ry:0.52,rw:0.1160,rh:0.46},
+  {id:'E13', rx:0.504,ry:0.52,rw:0.1160,rh:0.46},
+  {id:'E14', rx:0.628,ry:0.52,rw:0.1160,rh:0.46},
+  {id:'E15', rx:0.752,ry:0.52,rw:0.1160,rh:0.46},
+  {id:'E16', rx:0.876,ry:0.52,rw:0.1160,rh:0.46},
+];
+
+/* Visão ativa: alterna entre 0=Montagem e 1=Estações */
+let visaoAtual = 0;
+let LAYOUT = LAYOUT_MONTAGEM;
+
+function alternarVisao(){
+  visaoAtual = visaoAtual===0 ? 1 : 0;
+  LAYOUT = visaoAtual===0 ? LAYOUT_MONTAGEM : LAYOUT_ESTACOES;
+  /* Atualiza indicador no header */
+  const badge = document.getElementById('visao-badge');
+  if(badge){
+    badge.textContent = visaoAtual===0 ? 'MONTAGEM DE CAIXA' : 'ESTAÇÕES ACABAMENTO';
+    badge.style.background = visaoAtual===0 ? '#185FA5' : '#1D9E75';
+  }
+  resize();
+}
+
+/* Troca de visão sincronizada com o fetch — gerenciado no INIT */
 
 /* ── CORES ───────────────────────────────────────── */
 const SC = {
@@ -326,7 +354,12 @@ const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
 let W=0,H=0,hovId=null,selId=null,blinkOn=true;
 setInterval(()=>{blinkOn=!blinkOn;draw();},600);
 
-function mbox(l){return{x:l.rx*W,y:l.ry*H,w:l.rw*W,h:l.rh*H};}
+function mbox(l){
+  const banOff=typeof BANNER_OFFSET!=='undefined'?BANNER_OFFSET:32;
+  const availH=H-banOff;
+  return{x:l.rx*W, y:banOff+l.ry*availH, w:l.rw*W, h:l.rh*availH};
+}
+let BANNER_OFFSET=32;
 function rr(c,x,y,w,h,r){
   if(w<=0||h<=0)return; r=Math.min(r,w/2,h/2);
   c.beginPath();
@@ -397,12 +430,12 @@ function drawProcessos(item,x,y,w,h,bg){
     const emojiW=fszEmoji*1.15;
 
     /* nome do processo, preto, ao lado do emoji */
-    ctx.font=`600 ${fszTxt}px 'Segoe UI',Arial,sans-serif`;
+    ctx.font=`600 ${fszTxt}px 'Source Sans 3','Segoe UI',Arial,sans-serif`;
     ctx.fillStyle='#1A2540'; ctx.textAlign='left';
     let nome=p.nome;
     const maxTxtW=chipW-emojiW-10;
     while(ctx.measureText(nome).width>maxTxtW && nome.length>3){ nome=nome.slice(0,-1); }
-    ctx.fillText(nome, chipX+5+emojiW, rowY+rowH/2+1);
+    ctx.fillText(nome, chipX+5+emojiW+4, rowY+rowH/2+1);
     ctx.textBaseline='alphabetic';
   });
 }
@@ -413,6 +446,21 @@ function draw(){
   ctx.strokeStyle='rgba(0,0,0,0.05)'; ctx.lineWidth=1;
   for(let gx=.1;gx<1;gx+=.1){ctx.beginPath();ctx.moveTo(gx*W,0);ctx.lineTo(gx*W,H);ctx.stroke();}
   for(let gy=.15;gy<1;gy+=.15){ctx.beginPath();ctx.moveTo(0,gy*H);ctx.lineTo(W,gy*H);ctx.stroke();}
+
+  /* ── Banner de título da visão ── */
+  const isMontagem = visaoAtual===0;
+  const bannerBg  = '#185FA5';
+  const bannerTxt = isMontagem ? 'MONTAGEM DE CAIXA' : 'ESTAÇÕES ACABAMENTO';
+  const bannerH   = Math.max(28, H*0.055);
+  BANNER_OFFSET   = bannerH+4;
+  ctx.fillStyle=bannerBg;
+  rr(ctx,0,0,W,bannerH,6); ctx.fill();
+  /* texto do banner */
+  const fszBanner=Math.max(18,Math.min(28,bannerH*0.65));
+  ctx.font=`900 ${fszBanner}px 'Source Sans 3','Segoe UI',Arial,sans-serif`;
+  ctx.fillStyle='#FFFFFF'; ctx.textAlign='left'; ctx.textBaseline='middle';
+  ctx.fillText(bannerTxt, 18, bannerH/2+1);
+  ctx.textBaseline='alphabetic';
 
   LAYOUT.forEach(l=>{
     const {x,y,w,h}=mbox(l);
@@ -453,9 +501,11 @@ function draw(){
     /* corrige cantos inferiores da faixa para ficarem retos (não arredondados) */
     ctx.fillRect(x+1,y+headerH/2,w-2,headerH/2);
 
-    const fsz=Math.max(8,Math.min(10,w*.115));
+    /* ID proporcional: começa com tamanho máximo e reduz até caber */
+    let fsz=Math.min(headerH*0.70, w*0.18, 20);
+    fsz=Math.max(9,fsz);
     ctx.textAlign='left';
-    ctx.font=`700 ${fsz}px 'Segoe UI',Arial,sans-serif`;
+    ctx.font=`700 ${fsz}px 'Source Sans 3','Segoe UI',Arial,sans-serif`;
     const idTxt=l.id;
     ctx.fillStyle='#1A2540';
     const idX=x+6;
@@ -464,14 +514,17 @@ function draw(){
     const idW=ctx.measureText(idTxt).width;
 
     if(item && item.cod){
-      ctx.font=`500 ${fsz*0.85}px 'Segoe UI',Arial,sans-serif`;
+      ctx.font=`500 ${Math.round(fsz*0.85)}px 'Source Sans 3','Segoe UI',Arial,sans-serif`;
       const sepTxt=' - ';
       ctx.fillStyle='rgba(26,37,64,0.55)';
       ctx.fillText(sepTxt, idX+idW, idTextY);
       const sepW=ctx.measureText(sepTxt).width;
 
-      const fszCod=Math.max(7,Math.min(9,w*.1));
-      ctx.font=`700 ${fszCod}px 'Courier New',monospace`;
+      /* Código: tamanho proporcional ao espaço restante */
+      const espRestante=w-12-(idX+idW+ctx.measureText(' - ').width-x);
+      let fszCod=Math.min(headerH*0.65, fsz, 18);
+      fszCod=Math.max(8,fszCod);
+      ctx.font=`700 ${fszCod}px 'Source Sans 3','Segoe UI',Arial,sans-serif`;
       let dispCod=item.cod;
       const maxCodW=w-12-(idX+idW+sepW-x);
       while(ctx.measureText(dispCod).width>maxCodW && dispCod.length>2){ dispCod=dispCod.slice(0,-1); }
@@ -496,7 +549,7 @@ function draw(){
       const prog=Number(item.progresso)||0;
       const fszS=Math.max(8,Math.min(10,w*.105));
       const pctY=footY+fszS+3;
-      ctx.font=`700 ${fszS}px 'Segoe UI',Arial,sans-serif`;
+      ctx.font=`700 ${fszS}px 'Source Sans 3','Segoe UI',Arial,sans-serif`;
       ctx.fillStyle='#1A2540'; ctx.textAlign='center';
       ctx.fillText(prog+'%',x+w/2,pctY);
 
@@ -507,7 +560,7 @@ function draw(){
       /* Status (dias restantes / concluído) — badge abaixo da barra de progresso */
       const dl=diasLabel(item);
       const fszD=Math.max(7,Math.min(9,w*.095));
-      ctx.font=`600 ${fszD}px 'Segoe UI',Arial,sans-serif`;
+      ctx.font=`600 ${fszD}px 'Source Sans 3','Segoe UI',Arial,sans-serif`;
       const dlW=ctx.measureText(dl).width;
       const dlPW=Math.min(dlW+12,w-10), dlPH=fszD+7;
       const dlPX=x+w/2-dlPW/2, dlPY=by+bh+6;
@@ -516,7 +569,7 @@ function draw(){
       ctx.fillStyle=textCol(col); ctx.textAlign='center';
       ctx.fillText(dl,x+w/2,dlPY+dlPH-dlPadBaseline(fszD));
     } else {
-      ctx.font=`400 ${Math.max(8,w*.09)}px 'Segoe UI',Arial,sans-serif`;
+      ctx.font=`400 ${Math.max(8,w*.09)}px 'Source Sans 3','Segoe UI',Arial,sans-serif`;
       ctx.fillStyle='rgba(0,0,0,0.25)'; ctx.textAlign='center';
       ctx.fillText('livre',x+w/2,bodyY+bodyH/2+4);
     }
@@ -684,7 +737,7 @@ function updateMetrics(){
       `<div class="alarm-item ${a.cls}"><span>${a.icone}</span><span>${a.texto}</span></div>`
     ).join('');
     alBar.innerHTML = `<div class="alarm-title">${titulo}</div><div class="alarm-cascade">${itensHtml}</div>`;
-    try{ if(!window._alarmPlayed){ new Audio("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAA...").play().catch(()=>{}); window._alarmPlayed=true; } }catch(e){}
+    tocarAlarme();
   } else {
     alBar.className='alarm-bar';
     window._alarmPlayed=false;
@@ -880,6 +933,94 @@ function verDiagnostico(){
 function setMsg(t,m){const el=document.getElementById('smsg');el.style.display='block';el.className='smsg '+t;el.textContent=m;}
 function salvarURL(){const url=document.getElementById('sheets-url').value.trim();if(!url){setMsg('err','Cole a URL.');return;}localStorage.setItem('sheets_url',url);fetchSheets();}
 function toggleHelp(){const p=document.getElementById('help-panel');p.style.display=p.style.display==='none'?'block':'none';}
+
+/* ── SISTEMA DE ALARME SONORO ─────────────────────
+   Sons gerados via Web Audio API (sem arquivos externos)
+   Toca quando há itens Atrasados ou em Alarme <6h
+   Repete a cada 15 minutos enquanto a condição persistir
+─────────────────────────────────────────────────── */
+let _audioCtx=null;
+let _ultimoAlarmeSom=0;
+const INTERVALO_ALARME_MS=15*60*1000; /* 15 minutos */
+
+function getAudioCtx(){
+  if(!_audioCtx) _audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  return _audioCtx;
+}
+
+/* Sons disponíveis — cada um é uma sequência de notas */
+const SONS_ALARME={
+  'Bipe Simples':    [[880,0.15],[0,0.05],[880,0.15]],
+  'Sirene Dupla':    [[660,0.2],[880,0.2],[660,0.2],[880,0.2]],
+  'Alerta Urgente':  [[1047,0.1],[0,0.05],[1047,0.1],[0,0.05],[1047,0.3]],
+  'Tom Grave':       [[220,0.4],[0,0.05],[220,0.4]],
+  'Escala Crescente':[[440,0.12],[554,0.12],[659,0.12],[880,0.25]],
+};
+let somSelecionado=localStorage.getItem('som_alarme')||'Sirene Dupla';
+
+function tocarSom(notas){
+  try{
+    const ac=getAudioCtx();
+    let t=ac.currentTime+0.05;
+    notas.forEach(([freq,dur])=>{
+      if(freq===0){ t+=dur; return; }
+      const osc=ac.createOscillator();
+      const gain=ac.createGain();
+      osc.connect(gain); gain.connect(ac.destination);
+      osc.frequency.value=freq;
+      osc.type='sine';
+      gain.gain.setValueAtTime(0.001,t);
+      gain.gain.exponentialRampToValueAtTime(0.4,t+0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001,t+dur-0.02);
+      osc.start(t); osc.stop(t+dur);
+      t+=dur;
+    });
+  }catch(e){ console.warn('Audio bloqueado:',e); }
+}
+
+function tocarAlarme(){
+  const agora=Date.now();
+  if(agora-_ultimoAlarmeSom < INTERVALO_ALARME_MS) return;
+  _ultimoAlarmeSom=agora;
+  const notas=SONS_ALARME[somSelecionado]||SONS_ALARME['Sirene Dupla'];
+  /* Toca 3 vezes com intervalo */
+  tocarSom(notas);
+  setTimeout(()=>tocarSom(notas),800);
+  setTimeout(()=>tocarSom(notas),1600);
+}
+
+function testarSom(){
+  _ultimoAlarmeSom=0; /* força tocar imediatamente */
+  tocarAlarme();
+}
+
+function abrirConfiguracaoSom(){
+  const opcoes=Object.keys(SONS_ALARME).map(s=>
+    `<option value="${s}"${s===somSelecionado?' selected':''}>${s}</option>`
+  ).join('');
+  const modal=document.createElement('div');
+  modal.id='modal-som';
+  modal.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:999;display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML=`
+    <div style="background:#fff;border-radius:12px;padding:24px;min-width:300px;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+      <h3 style="font-size:15px;font-weight:600;margin:0 0 16px;color:#1A2540;">🔔 Configurar Alarme Sonoro</h3>
+      <label style="font-size:12px;color:#6B7280;display:block;margin-bottom:6px;">Som do alarme</label>
+      <select id="sel-som" style="width:100%;padding:8px;border:1px solid #D8DCE3;border-radius:6px;font-size:13px;margin-bottom:12px;">${opcoes}</select>
+      <p style="font-size:11px;color:#9CA3AF;margin:0 0 16px;">O alarme toca quando há itens <strong>Atrasados</strong> ou em <strong>Alarme &lt;6h</strong>, repetindo a cada 15 minutos.</p>
+      <div style="display:flex;gap:8px;">
+        <button onclick="testarSom()" style="flex:1;padding:8px;background:#EEF0F4;border:1px solid #D8DCE3;border-radius:6px;font-size:12px;cursor:pointer;">▶ Testar som</button>
+        <button onclick="salvarSom()" style="flex:1;padding:8px;background:#185FA5;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;">Salvar</button>
+        <button onclick="document.getElementById('modal-som').remove()" style="padding:8px 12px;background:#EEF0F4;border:1px solid #D8DCE3;border-radius:6px;font-size:12px;cursor:pointer;">✕</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function salvarSom(){
+  somSelecionado=document.getElementById('sel-som').value;
+  localStorage.setItem('som_alarme',somSelecionado);
+  document.getElementById('modal-som').remove();
+}
 function copiarScript(){navigator.clipboard.writeText(document.getElementById('appsscript-code').textContent).then(()=>alert('Código copiado!'));}
 
 /* ── RELÓGIO ─────────────────────────────────────── */
@@ -894,14 +1035,18 @@ setInterval(tick,1000);tick();
 
 /* ── INIT ────────────────────────────────────────── */
 const URL_PADRAO='https://docs.google.com/spreadsheets/d/e/2PACX-1vQdtcFiJN8tFrW06IXOlvQ69KCf-B3rZseQggyBnKv78DWqeN63NQPHxAzKesH-UbWuskCnsaayuyw3/pub?gid=2083343099&single=true&output=csv';
-/* Se não houver URL salva, usa a URL padrão do CSV automaticamente */
 if(!localStorage.getItem('sheets_url')){
   localStorage.setItem('sheets_url', URL_PADRAO);
 }
 const saved=localStorage.getItem('sheets_url');
 document.getElementById('sheets-url').value=saved;
 fetchSheets();
-setInterval(()=>{fetchSheets();},30000);
+
+/* Alterna visão + busca dados a cada 30 segundos */
+setInterval(()=>{
+  alternarVisao();
+  fetchSheets();
+}, 30000);
 </script>
 </body>
 </html>
